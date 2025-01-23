@@ -61,9 +61,18 @@ jobs:
           git push --set-upstream origin release/$NEW_VERSION
 
           echo "new_version=$NEW_VERSION" >> "$GITHUB_ENV"
+      - name: Generate beta release notes
+        if: ${{ vars.RELEASE_NAME == 'parallels-desktop-beta' }}
+        run: |
+          ./.github/workflow_scripts/get-latest-beta-changelog.sh --repo ${{ github.repository }} --output-to-file --version "${EXT_VERSION}"
+          cat release_notes.md
+      - name: Generate release notes
+        if: ${{ vars.RELEASE_NAME == 'parallels-desktop' }}
+        run: |
+          ./.github/workflow_scripts/get-latest-changelog.sh --output-to-file
+          cat release_notes.md
       - name: Create PR
         run: |
-          ./.github/workflow_scripts/generate-changelog.sh --mode RELEASE --repo ${{ github.repository }} --version ${{ env.new_version }} --output-to-file 
           gh pr create \
             --title "Release version ${{ env.new_version }}" \
             --body-file release_notes.md \
